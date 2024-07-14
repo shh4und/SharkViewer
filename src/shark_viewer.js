@@ -390,10 +390,10 @@ export default class SharkViewer {
     this.flip = false;
     // color array, nodes of type 0 show as first color, etc.
     this.colors = [
-      0x31ffdc,
-      0x6d4ff3,
-      0xaa3af0,
-      0xf38032,
+      0x000000, //MISSING NODES COLOR
+      0x394ECF, //TEST SWC COLOR
+      0xEB4034, //GOLD SWC COLOR
+      0xC3FE1A, //EXTRA NODES COLOR
       0x59fc20,
       0xf8d43c,
       0xfd2c4d,
