@@ -10,14 +10,26 @@
       }
       html, body {
         height: 100%;
+        margin: 0;
+        padding: 0;
       }
       .content {
         height: 100%;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
       }
       #container {
         flex: 1;
+        position: relative;
+      }
+      .sidebar {
+        width: 320px;
+        background-color: #2c3e50;
+        color: white;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
       }
       .navigation {
         display: flex;
@@ -25,6 +37,174 @@
         align-content: flex-end;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 20px;
+      }
+      .navigation h1 {
+        margin: 0;
+        font-size: 24px;
+        color: #ecf0f1;
+      }
+      .navigation a {
+        color: #3498db;
+        text-decoration: none;
+      }
+      .navigation a:hover {
+        text-decoration: underline;
+      }
+      .control-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #34495e;
+        border-radius: 5px;
+      }
+      .control-section h2 {
+        margin: 0 0 15px 0;
+        font-size: 16px;
+        color: #3498db;
+      }
+      .control-section label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #ecf0f1;
+      }
+      .control-section input[type="file"] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        background-color: #ecf0f1;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+      }
+      .neuron-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .neuron-item {
+        background-color: #2c3e50;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 2px solid transparent;
+      }
+      .neuron-item.selected {
+        border-color: #3498db;
+      }
+      .neuron-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .neuron-name {
+        font-weight: bold;
+        font-size: 13px;
+        word-break: break-all;
+        flex: 1;
+        margin-right: 10px;
+      }
+      .neuron-controls {
+        display: flex;
+        gap: 5px;
+        flex-shrink: 0;
+      }
+      .neuron-controls button {
+        padding: 4px 8px;
+        font-size: 11px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        background-color: #3498db;
+        color: white;
+      }
+      .neuron-controls button:hover {
+        background-color: #2980b9;
+      }
+      .neuron-controls button.danger {
+        background-color: #e74c3c;
+      }
+      .neuron-controls button.danger:hover {
+        background-color: #c0392b;
+      }
+      .color-opacity-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .color-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .color-control input[type="color"] {
+        width: 50px;
+        height: 30px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .opacity-control {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .opacity-control input[type="range"] {
+        width: 100%;
+      }
+      .opacity-value {
+        font-size: 12px;
+        color: #3498db;
+        font-weight: bold;
+      }
+      .preset-colors {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        margin-top: 5px;
+      }
+      .preset-color {
+        width: 100%;
+        height: 30px;
+        border: 2px solid #2c3e50;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .preset-color:hover {
+        transform: scale(1.1);
+        border-color: #3498db;
+      }
+      .info {
+        font-size: 11px;
+        color: #95a5a6;
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #1a252f;
+        border-radius: 3px;
+      }
+      .camera-button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 8px;
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .camera-button:hover {
+        background-color: #229954;
+      }
+      .camera-button:active {
+        transform: scale(0.98);
       }
     </style>
     <script id="swc" type='text/plain'>
@@ -90,18 +270,48 @@
   </head>
   <body>
     <div class="content">
-      <div class="navigation">
-        <h1>SharkViewer</h1>
-        <a href="https://github.com/JaneliaSciComp/SharkViewer">github</a>
+      <div class="sidebar">
+        <div class="navigation">
+          <h1>SharkViewer</h1>
+          <a href="https://github.com/JaneliaSciComp/SharkViewer" target="_blank">github</a>
+        </div>
+        
+        <div class="control-section">
+          <h2>📁 Carregar Neurônios</h2>
+          <label for='swc_input'>Arquivo SWC:</label>
+          <input type='file' name='swc_input' id='swc_input' accept=".swc" />
+          <label for='obj_input'>Arquivo OBJ:</label>
+          <input type='file' name='obj_input' id='obj_input' accept=".obj" />
+        </div>
+
+        <div class="control-section">
+          <h2>🧠 Neurônios Carregados</h2>
+          <ul class="neuron-list" id="neuron-list">
+            <li style="color: #95a5a6; font-size: 13px; text-align: center; padding: 10px;">
+              Nenhum neurônio carregado
+            </li>
+          </ul>
+        </div>
+
+        <div class="control-section">
+          <h2>📷 Controles de Câmera</h2>
+          <button class="camera-button" onclick="resetCameraToAll()">
+            <span>🎯</span>
+            <span>Centralizar em Todos</span>
+          </button>
+          <button class="camera-button" onclick="resetCameraToFirst()">
+            <span>🔄</span>
+            <span>Resetar Posição Inicial</span>
+          </button>
+        </div>
+
+        <div class="info">
+          💡 <strong>Dica:</strong> Carregue múltiplos arquivos SWC para sobrepor neurônios. Use os controles de cor e transparência para cada neurônio individualmente.
+        </div>
       </div>
-      <form>
-        <label for='swc_input'>Upload a swc file to view it in the SharkViewer:</label>
-        <input type='file' name='swc_input' id='swc_input' />
-        <label for='obj_input'>Upload an obj file to view it in the SharkViewer:</label>
-        <input type='file' name='obj_input' id='obj_input' />
-      </form>
+      
       <!-- three.js container -->
-      <div id="container" style='position:relative'></div>
+      <div id="container"></div>
     </div>
     <!-- info on screen display -->
     <script type="text/javascript" src="./three.min.js"></script>

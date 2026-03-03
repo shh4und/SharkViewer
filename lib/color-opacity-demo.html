@@ -1,0 +1,444 @@
+<!doctype html>
+<html>
+<head>
+  <title>Shark Viewer - Color & Opacity Demo</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    *:focus {
+      outline: none;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+    
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    
+    .sidebar {
+      width: 300px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    .viewer {
+      flex: 1;
+      position: relative;
+    }
+    
+    h1 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #ecf0f1;
+    }
+    
+    h2 {
+      font-size: 16px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #3498db;
+    }
+    
+    .control-group {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #34495e;
+      border-radius: 5px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #ecf0f1;
+    }
+    
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      background-color: #ecf0f1;
+      border: none;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    
+    input[type="color"] {
+      width: 100%;
+      height: 40px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+      margin-top: 5px;
+    }
+    
+    select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 3px;
+      margin-bottom: 15px;
+      border: none;
+      font-size: 14px;
+    }
+    
+    .slider-value {
+      display: inline-block;
+      margin-left: 10px;
+      font-weight: bold;
+      color: #3498db;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    button.danger {
+      background-color: #e74c3c;
+    }
+    
+    button.danger:hover {
+      background-color: #c0392b;
+    }
+    
+    .info {
+      font-size: 12px;
+      color: #95a5a6;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #1a252f;
+      border-radius: 3px;
+    }
+
+    .preset-colors {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .preset-color {
+      width: 100%;
+      height: 40px;
+      border: 2px solid #2c3e50;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .preset-color:hover {
+      transform: scale(1.1);
+      border-color: #3498db;
+    }
+  </style>
+  
+  <script id="swc" type='text/plain'>
+# ORIGINAL_SOURCE NeuronStudio 0.8.80
+# CREATURE
+# REGION
+# FIELD/LAYER
+# TYPE
+# CONTRIBUTOR
+# REFERENCE
+# RAW
+# EXTRAS
+# SOMA_AREA
+# SHINKAGE_CORRECTION 1.0 1.0 1.0
+# VERSION_NUMBER 1.0
+# VERSION_DATE 2007-07-24
+# SCALE 1.0 1.0 1.0
+1 1 14.566132 34.873772 7.857000 0.717830 -1
+2 0 16.022520 33.760513 7.047000 0.463378 1
+3 5 17.542000 32.604973 6.885001 0.638007 2
+4 0 19.163984 32.022469 5.913000 0.602284 3
+5 0 20.448090 30.822802 4.860000 0.436025 4
+6 6 21.897903 28.881084 3.402000 0.471886 5
+7 0 18.461960 30.289471 8.586000 0.447463 3
+8 6 19.420759 28.730757 9.558000 0.496217 7
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h1>🦈 Shark Viewer</h1>
+      <p style="font-size: 12px; color: #95a5a6; margin-bottom: 20px;">
+        Controle de Cor e Transparência de Neurônios
+      </p>
+      
+      <div class="control-group">
+        <h2>📁 Carregar Neurônio</h2>
+        <label for='swc_input'>Arquivo SWC:</label>
+        <input type='file' id='swc_input' accept=".swc" />
+      </div>
+      
+      <div class="control-group">
+        <h2>🎨 Controles do Neurônio</h2>
+        <label for="neuron_select">Selecionar Neurônio:</label>
+        <select id="neuron_select">
+          <option value="">Nenhum neurônio carregado</option>
+        </select>
+        
+        <label for="color_picker">
+          Cor Personalizada:
+        </label>
+        <input type="color" id="color_picker" value="#394ECF" />
+        
+        <label>Cores Pré-definidas:</label>
+        <div class="preset-colors">
+          <div class="preset-color" style="background-color: #394ECF;" data-color="#394ECF" title="Azul Original"></div>
+          <div class="preset-color" style="background-color: #EB4034;" data-color="#EB4034" title="Vermelho"></div>
+          <div class="preset-color" style="background-color: #C3FE1A;" data-color="#C3FE1A" title="Verde"></div>
+          <div class="preset-color" style="background-color: #59fc20;" data-color="#59fc20" title="Verde Claro"></div>
+          <div class="preset-color" style="background-color: #f8d43c;" data-color="#f8d43c" title="Amarelo"></div>
+          <div class="preset-color" style="background-color: #fd2c4d;" data-color="#fd2c4d" title="Rosa"></div>
+          <div class="preset-color" style="background-color: #9b59b6;" data-color="#9b59b6" title="Roxo"></div>
+          <div class="preset-color" style="background-color: #34495e;" data-color="#34495e" title="Cinza"></div>
+        </div>
+        
+        <label for="opacity_slider">
+          Transparência: <span class="slider-value" id="opacity_value">100%</span>
+        </label>
+        <input type="range" id="opacity_slider" min="0" max="100" value="100" />
+        
+        <button id="apply_btn">Aplicar Alterações</button>
+        <button id="reset_btn" class="danger">Resetar para Padrão</button>
+      </div>
+      
+      <div class="control-group">
+        <h2>👁️ Visibilidade</h2>
+        <button id="toggle_btn">Ocultar Neurônio</button>
+      </div>
+      
+      <div class="info">
+        💡 <strong>Dica:</strong> Carregue um arquivo SWC, selecione o neurônio, e use os controles de cor e transparência para personalizar a visualização.
+      </div>
+    </div>
+    
+    <div class="viewer">
+      <div id="container" style="width: 100%; height: 100%;"></div>
+    </div>
+  </div>
+  
+  <script type="text/javascript" src="./three.min.js"></script>
+  <script type="text/javascript" src="./shark_viewer.js"></script>
+  <script>
+    /* global sharkViewer */
+    let viewer = null;
+    const loadedNeurons = {};
+    let selectedNeuronId = null;
+    
+    // Atualiza a lista de neurônios no select
+    function updateNeuronList() {
+      const select = document.getElementById('neuron_select');
+      select.innerHTML = '';
+      
+      const neuronIds = Object.keys(loadedNeurons);
+      if (neuronIds.length === 0) {
+        select.innerHTML = '<option value="">Nenhum neurônio carregado</option>';
+        return;
+      }
+      
+      neuronIds.forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = id;
+        select.appendChild(option);
+      });
+      
+      // Seleciona o primeiro neurônio automaticamente
+      if (neuronIds.length > 0 && !selectedNeuronId) {
+        selectedNeuronId = neuronIds[0];
+        select.value = selectedNeuronId;
+      }
+    }
+    
+    // Carrega arquivo SWC
+    function loadSwcFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const swcText = event.target.result;
+        const swc = sharkViewer.swcParser(swcText);
+        
+        if (Object.keys(swc).length > 0) {
+          const neuronId = file.name;
+          viewer.loadNeuron(neuronId, null, swc, true, false, true);
+          loadedNeurons[neuronId] = { visible: true, color: '#394ECF', opacity: 1.0 };
+          updateNeuronList();
+          viewer.render();
+        } else {
+          alert('Por favor, carregue um arquivo SWC válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    // Aplica cor e transparência ao neurônio selecionado
+    function applyChanges() {
+      const select = document.getElementById('neuron_select');
+      const neuronId = select.value;
+      
+      if (!neuronId || !loadedNeurons[neuronId]) {
+        alert('Selecione um neurônio primeiro!');
+        return;
+      }
+      
+      const color = document.getElementById('color_picker').value;
+      const opacity = document.getElementById('opacity_slider').value / 100;
+      
+      viewer.setNeuronColor(neuronId, color);
+      viewer.setNeuronOpacity(neuronId, opacity);
+      
+      loadedNeurons[neuronId].color = color;
+      loadedNeurons[neuronId].opacity = opacity;
+      
+      viewer.render();
+    }
+    
+    // Reseta para valores padrão
+    function resetToDefault() {
+      const select = document.getElementById('neuron_select');
+      const neuronId = select.value;
+      
+      if (!neuronId || !loadedNeurons[neuronId]) {
+        alert('Selecione um neurônio primeiro!');
+        return;
+      }
+      
+      const defaultColor = '#394ECF';
+      const defaultOpacity = 1.0;
+      
+      document.getElementById('color_picker').value = defaultColor;
+      document.getElementById('opacity_slider').value = 100;
+      document.getElementById('opacity_value').textContent = '100%';
+      
+      viewer.setNeuronColor(neuronId, defaultColor);
+      viewer.setNeuronOpacity(neuronId, defaultOpacity);
+      
+      loadedNeurons[neuronId].color = defaultColor;
+      loadedNeurons[neuronId].opacity = defaultOpacity;
+      
+      viewer.render();
+    }
+    
+    // Alterna visibilidade do neurônio
+    function toggleVisibility() {
+      const select = document.getElementById('neuron_select');
+      const neuronId = select.value;
+      
+      if (!neuronId || !loadedNeurons[neuronId]) {
+        alert('Selecione um neurônio primeiro!');
+        return;
+      }
+      
+      const isVisible = loadedNeurons[neuronId].visible;
+      viewer.setNeuronVisible(neuronId, !isVisible);
+      loadedNeurons[neuronId].visible = !isVisible;
+      
+      const btn = document.getElementById('toggle_btn');
+      btn.textContent = isVisible ? 'Mostrar Neurônio' : 'Ocultar Neurônio';
+      
+      viewer.render();
+    }
+    
+    // Atualiza o texto do slider de opacidade
+    function updateOpacityLabel() {
+      const value = document.getElementById('opacity_slider').value;
+      document.getElementById('opacity_value').textContent = value + '%';
+    }
+    
+    // Atualiza os controles quando um neurônio é selecionado
+    function onNeuronSelect() {
+      const select = document.getElementById('neuron_select');
+      const neuronId = select.value;
+      
+      if (neuronId && loadedNeurons[neuronId]) {
+        selectedNeuronId = neuronId;
+        const neuronData = loadedNeurons[neuronId];
+        
+        document.getElementById('color_picker').value = neuronData.color;
+        document.getElementById('opacity_slider').value = neuronData.opacity * 100;
+        updateOpacityLabel();
+        
+        const btn = document.getElementById('toggle_btn');
+        btn.textContent = neuronData.visible ? 'Ocultar Neurônio' : 'Mostrar Neurônio';
+      }
+    }
+
+    // Aplica cor pré-definida
+    function applyPresetColor(color) {
+      document.getElementById('color_picker').value = color;
+      applyChanges();
+    }
+    
+    // Inicialização
+    window.onload = () => {
+      // Event listeners
+      document.getElementById('swc_input').addEventListener('change', loadSwcFile);
+      document.getElementById('apply_btn').addEventListener('click', applyChanges);
+      document.getElementById('reset_btn').addEventListener('click', resetToDefault);
+      document.getElementById('toggle_btn').addEventListener('click', toggleVisibility);
+      document.getElementById('opacity_slider').addEventListener('input', updateOpacityLabel);
+      document.getElementById('neuron_select').addEventListener('change', onNeuronSelect);
+      
+      // Cores pré-definidas
+      document.querySelectorAll('.preset-color').forEach(el => {
+        el.addEventListener('click', () => {
+          applyPresetColor(el.dataset.color);
+        });
+      });
+      
+      // Inicializa o viewer
+      viewer = new sharkViewer.default({
+        animated: false,
+        mode: 'particle',
+        dom_element: document.getElementById('container'),
+        showAxes: false,
+        showStats: false,
+        maxVolumeSize: 5000
+      });
+      
+      window.viewer = viewer;
+      viewer.init();
+      viewer.animate();
+      
+      // Carrega neurônio de exemplo
+      const swc = sharkViewer.swcParser(document.getElementById('swc').text);
+      viewer.loadNeuron('exemplo.swc', null, swc, true, false, true);
+      loadedNeurons['exemplo.swc'] = { visible: true, color: '#394ECF', opacity: 1.0 };
+      updateNeuronList();
+      viewer.render();
+    };
+  </script>
+</body>
+</html>

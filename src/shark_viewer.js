@@ -4,9 +4,10 @@ export { swcParser };
 
 const THREE = require("three");
 require("three-obj-loader")(THREE);
-const Stats = require('stats.js');
+const Stats = require("stats.js");
 
-const OrbitUnlimitedControls = require("@janelia/three-orbit-unlimited-controls").default;
+const OrbitUnlimitedControls =
+  require("@janelia/three-orbit-unlimited-controls").default;
 
 const DEFAULT_POINT_THRESHOLD = 50;
 
@@ -26,7 +27,7 @@ const vertexShader = [
   "gl_PointSize = radius * ((particleScale*2.0) / length(mvPosition.z));",
   "gl_Position = projectionMatrix * mvPosition;",
   "vRadius = radius;",
-  "}"
+  "}",
 ].join("\n");
 
 const fragmentShader = [
@@ -61,7 +62,7 @@ const fragmentShader = [
   "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
   "gl_FragDepthEXT = depth;",
   "#endif",
-  "}"
+  "}",
 ].join("\n");
 
 const fragmentShaderAnnotation = [
@@ -95,7 +96,7 @@ const fragmentShaderAnnotation = [
   "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
   "gl_FragDepthEXT = depth;",
   "#endif",
-  "}"
+  "}",
 ].join("\n");
 
 const vertexShaderCone = [
@@ -136,7 +137,7 @@ const vertexShaderCone = [
   "   // foreshortening limit is a tradeoff between overextruded cone artifacts, and depth artifacts",
   "   if (foreshortening > 4.0) foreshortening = 0.9; // hack to not pop out at extreme angles...",
   "   depthScale = radius * foreshortening; // correct depth for foreshortening",
-  "}"
+  "}",
 ].join("\n");
 
 const fragmentShaderCone = [
@@ -162,7 +163,7 @@ const fragmentShaderCone = [
   "float depth = (((far-near) * ndc_depth) + near + far) / 2.0;",
   "gl_FragDepthEXT = depth;",
   "#endif",
-  "}"
+  "}",
 ].join("\n");
 
 function convertToHexColor(i) {
@@ -190,10 +191,10 @@ function calculateBoundingBox(swcJSON) {
     ymin: Infinity,
     ymax: -Infinity,
     zmin: Infinity,
-    zmax: -Infinity
+    zmax: -Infinity,
   };
 
-  Object.values(swcJSON).forEach(node => {
+  Object.values(swcJSON).forEach((node) => {
     const r = node.radius;
     if (node.x - r < boundingBox.xmin) {
       boundingBox.xmin = node.x - r;
@@ -231,12 +232,12 @@ function calculateBoundingSphere(swcJSON, boundingBox) {
   let center = new THREE.Vector3(
     boundingBox.xmin + rx,
     boundingBox.ymin + ry,
-    boundingBox.zmin + rz
+    boundingBox.zmin + rz,
   );
 
   // Find each node that is outside the current bounding sphere.
   let radiusSq = radius * radius;
-  Object.values(swcJSON).forEach(node => {
+  Object.values(swcJSON).forEach((node) => {
     const nodeCenter = new THREE.Vector3(node.x, node.y, node.z);
     const nodeCenterToCenter = new THREE.Vector3();
     nodeCenterToCenter.subVectors(center, nodeCenter);
@@ -263,14 +264,19 @@ function calculateBoundingSphere(swcJSON, boundingBox) {
 
   return { center, radius };
 }
-/** 
+/**
  * Calculate the camera position on the edge of the bounding sphere
  * @param {number} fov - the field of view for the scene
  * @param {Object} boundingSphere - object describing radius and center point of the sphere
  * @param {boolean} frontToBack - if true, then look down the Z-stack from point 0
  * @returns {Object} THREE.Vector3 object used to position the camera
  */
-function calculateCameraPosition(fov, boundingSphere, frontToBack, maxVolumeSize) {
+function calculateCameraPosition(
+  fov,
+  boundingSphere,
+  frontToBack,
+  maxVolumeSize,
+) {
   const theta = (fov * (Math.PI / 180.0)) / 2.0;
   const d = boundingSphere.radius / Math.sin(theta);
   const { center } = boundingSphere;
@@ -278,15 +284,18 @@ function calculateCameraPosition(fov, boundingSphere, frontToBack, maxVolumeSize
   // get stuck at that point and wont be able to dolly in or out. Forcing
   // the z position to be at least half the negative maxVolumeSize seems
   // to fix the issue.
-  const z = Math.max(-(maxVolumeSize/2), frontToBack ? center.z - d : center.z + d);
+  const z = Math.max(
+    -(maxVolumeSize / 2),
+    frontToBack ? center.z - d : center.z + d,
+  );
   return new THREE.Vector3(center.x, center.y, z);
 }
 
 function applySemiTransparentShader(object, color) {
-  object.traverse(child => {
+  object.traverse((child) => {
     child.material = new THREE.ShaderMaterial({
       uniforms: {
-        color: { type: "c", value: new THREE.Color(`${color}`) }
+        color: { type: "c", value: new THREE.Color(`${color}`) },
       },
       vertexShader: `
         #line 585
@@ -319,7 +328,7 @@ function applySemiTransparentShader(object, color) {
       transparent: true,
       depthTest: true,
       depthWrite: false,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
     });
   });
   return object;
@@ -336,11 +345,11 @@ function generateSkeleton(node, nodeParent) {
   const vertexParent = new THREE.Vector3(
     nodeParent.x,
     nodeParent.y,
-    nodeParent.z
+    nodeParent.z,
   );
   return {
     child: vertex,
-    parent: vertexParent
+    parent: vertexParent,
   };
 }
 
@@ -355,7 +364,7 @@ function createMetadataElement(metadata, colors) {
   metadiv.style.padding = "2px";
 
   let toinnerhtml = "";
-  metadata.forEach(m => {
+  metadata.forEach((m) => {
     const mtype = parseInt(m.type, 10);
     const threeColor = mtype < colors.length ? colors[mtype] : colors[0];
     let cssColor = threeColor;
@@ -367,7 +376,6 @@ function createMetadataElement(metadata, colors) {
   metadiv.innerHTML = toinnerhtml;
   return metadiv;
 }
-
 
 export default class SharkViewer {
   /* swc neuron json object:
@@ -391,13 +399,13 @@ export default class SharkViewer {
     // color array, nodes of type 0 show as first color, etc.
     this.colors = [
       0x000000, //MISSING NODES COLOR
-      0x394ECF, //TEST SWC COLOR
-      0xEB4034, //GOLD SWC COLOR
-      0xC3FE1A, //EXTRA NODES COLOR
+      0x394ecf, //TEST SWC COLOR
+      0xeb4034, //GOLD SWC COLOR
+      0xc3fe1a, //EXTRA NODES COLOR
       0x59fc20,
       0xf8d43c,
       0xfd2c4d,
-      0xc9c9c9
+      0xc9c9c9,
     ];
     this.radius_scale_factor = 1;
     this.metadata = false;
@@ -431,7 +439,7 @@ export default class SharkViewer {
       this.dom_element = args.dom_element;
     } else {
       this.dom_element = document.getElementById(
-        args.dom_element || "container"
+        args.dom_element || "container",
       );
     }
 
@@ -444,7 +452,7 @@ export default class SharkViewer {
   // sets up user specified configuration
   setValues(values) {
     if (values !== undefined) {
-      Object.keys(values).forEach(key => {
+      Object.keys(values).forEach((key) => {
         const newValue = values[key];
         if (newValue !== undefined) {
           if (key in this) {
@@ -463,9 +471,7 @@ export default class SharkViewer {
     return this.three_colors[0];
   }
 
-
-
-    // generates sphere mesh
+  // generates sphere mesh
   generateSphere(node) {
     const sphereMaterial = this.three_materials[node.type];
     const r1 = node.radius || 0.01;
@@ -484,7 +490,7 @@ export default class SharkViewer {
     const nodeParentVec = new THREE.Vector3(
       nodeParent.x,
       nodeParent.y,
-      nodeParent.z
+      nodeParent.z,
     );
     const dist = nodeVec.distanceTo(nodeParentVec);
     const cylAxis = new THREE.Vector3().subVectors(nodeVec, nodeParentVec);
@@ -502,7 +508,7 @@ export default class SharkViewer {
     const position = new THREE.Vector3(
       (node.x + nodeParent.x) / 2,
       (node.y + nodeParent.y) / 2,
-      (node.z + nodeParent.z) / 2
+      (node.z + nodeParent.z) / 2,
     );
     mesh.matrix.setPosition(position);
     return mesh;
@@ -528,7 +534,7 @@ export default class SharkViewer {
     coneParent.vertex = new THREE.Vector3(
       nodeParent.x,
       nodeParent.y,
-      nodeParent.z
+      nodeParent.z,
     );
     coneParent.radius = nodeParent.radius;
     coneParent.color = nodeParentColor;
@@ -536,7 +542,7 @@ export default class SharkViewer {
     // normals
     const n1 = new THREE.Vector3().subVectors(
       coneParent.vertex,
-      coneChild.vertex
+      coneChild.vertex,
     );
     const n2 = n1.clone().negate();
 
@@ -544,7 +550,7 @@ export default class SharkViewer {
       child: coneChild,
       parent: coneParent,
       normal1: n1,
-      normal2: n2
+      normal2: n2,
     };
   }
 
@@ -578,17 +584,17 @@ export default class SharkViewer {
       const customAttributes = {
         radius: { type: "fv1", value: [] },
         typeColor: { type: "c", value: [] },
-        vertices: { type: "f", value: [] }
+        vertices: { type: "f", value: [] },
       };
 
       const customUniforms = {
         particleScale: { type: "f", value: particleScale },
-        sphereTexture: { type: "t", value: sphereImg }
+        sphereTexture: { type: "t", value: sphereImg },
       };
 
       const indexLookup = {};
 
-      Object.keys(swcJSON).forEach(node => {
+      Object.keys(swcJSON).forEach((node) => {
         let nodeColor = this.nodeColor(swcJSON[node]);
 
         if (color) {
@@ -613,25 +619,25 @@ export default class SharkViewer {
 
         indexLookup[customAttributes.radius.value.length - 1] =
           swcJSON[node].sampleNumber;
-     });
+      });
       geometry.setAttribute(
         "position",
-        new THREE.Float32BufferAttribute(customAttributes.vertices.value, 3)
+        new THREE.Float32BufferAttribute(customAttributes.vertices.value, 3),
       );
       geometry.setAttribute(
         "radius",
-        new THREE.Float32BufferAttribute(customAttributes.radius.value, 1)
+        new THREE.Float32BufferAttribute(customAttributes.radius.value, 1),
       );
       geometry.setAttribute(
         "typeColor",
-        new THREE.Float32BufferAttribute(customAttributes.typeColor.value, 3)
+        new THREE.Float32BufferAttribute(customAttributes.typeColor.value, 3),
       );
 
       material = new THREE.ShaderMaterial({
         uniforms: customUniforms,
         vertexShader,
         fragmentShader,
-        transparent: true
+        transparent: true,
         // alphaTest: 0.5 // if having transparency issues, try including: alphaTest: 0.5,
       });
       material.extensions.fragDepth = true;
@@ -641,12 +647,12 @@ export default class SharkViewer {
       const particles = new THREE.Points(geometry, material);
       particles.userData = { indexLookup, materialShader };
 
-      material.onBeforeCompile = shader => {
+      material.onBeforeCompile = (shader) => {
         shader.uniforms.alpha = { value: 0 };
         shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
         shader.vertexShader = shader.vertexShader.replace(
           "#include <begin_vertex>",
-          ["vAlpha = alpha"].join("\n")
+          ["vAlpha = alpha"].join("\n"),
         );
         materialShader = shader;
 
@@ -665,27 +671,27 @@ export default class SharkViewer {
           typeColor: { type: "c", value: [] },
           vertices: { type: "f", value: [] },
           normals: { type: "f", value: [] },
-          uv: { type: "f", value: [] }
+          uv: { type: "f", value: [] },
         };
         const coneUniforms = {
-          sphereTexture: { type: "t", value: sphereImg }
+          sphereTexture: { type: "t", value: sphereImg },
         };
         const uvs = [
           new THREE.Vector2(0.5, 0),
           new THREE.Vector2(0.5, 1),
-          new THREE.Vector2(0.5, 1)
+          new THREE.Vector2(0.5, 1),
         ];
         const coneGeom = new THREE.BufferGeometry();
         let ix21 = 0;
 
-        Object.keys(swcJSON).forEach(node => {
+        Object.keys(swcJSON).forEach((node) => {
           if (swcJSON[node].parent !== -1) {
             // Paint two triangles to make a cone-imposter quadrilateral
             // Triangle #1
             const cone = this.generateCone(
               swcJSON[node],
               swcJSON[swcJSON[node].parent],
-              color
+              color,
             );
             let nodeColor = cone.child.color;
             if (color) {
@@ -807,27 +813,27 @@ export default class SharkViewer {
           }
         });
         coneGeom.setIndex(
-          new THREE.Uint32BufferAttribute(coneAttributes.indices.value, 1)
+          new THREE.Uint32BufferAttribute(coneAttributes.indices.value, 1),
         );
         coneGeom.setAttribute(
           "position",
-          new THREE.Float32BufferAttribute(coneAttributes.vertices.value, 3)
+          new THREE.Float32BufferAttribute(coneAttributes.vertices.value, 3),
         );
         coneGeom.setAttribute(
           "radius",
-          new THREE.Float32BufferAttribute(coneAttributes.radius.value, 1)
+          new THREE.Float32BufferAttribute(coneAttributes.radius.value, 1),
         );
         coneGeom.setAttribute(
           "typeColor",
-          new THREE.Float32BufferAttribute(coneAttributes.typeColor.value, 3)
+          new THREE.Float32BufferAttribute(coneAttributes.typeColor.value, 3),
         );
         coneGeom.setAttribute(
           "normal",
-          new THREE.Float32BufferAttribute(coneAttributes.normals.value, 3)
+          new THREE.Float32BufferAttribute(coneAttributes.normals.value, 3),
         );
         coneGeom.setAttribute(
           "uv",
-          new THREE.Float32BufferAttribute(coneAttributes.uv.value, 2)
+          new THREE.Float32BufferAttribute(coneAttributes.uv.value, 2),
         );
 
         const coneMaterial = new THREE.ShaderMaterial({
@@ -837,20 +843,20 @@ export default class SharkViewer {
           transparent: true,
           depthTest: true,
           side: THREE.DoubleSide,
-          alphaTest: 0.5 // if having transparency issues, try including: alphaTest: 0.5,
+          alphaTest: 0.5, // if having transparency issues, try including: alphaTest: 0.5,
         });
 
         coneMaterial.extensions.fragDepth = true;
 
         const coneMesh = new THREE.Mesh(coneGeom, coneMaterial);
 
-        coneMaterial.onBeforeCompile = shader => {
+        coneMaterial.onBeforeCompile = (shader) => {
           // console.log( shader )
           shader.uniforms.alpha = { value: 0 };
           shader.vertexShader = `uniform float alpha;\n${shader.vertexShader}`;
           shader.vertexShader = shader.vertexShader.replace(
             "#include <begin_vertex>",
-            ["vAlpha = alpha"].join("\n")
+            ["vAlpha = alpha"].join("\n"),
           );
           materialShader = shader;
 
@@ -864,14 +870,14 @@ export default class SharkViewer {
     }
     // sphere mode renders 3d sphere
     else if (this.mode === "sphere") {
-      Object.keys(swcJSON).forEach(node => {
+      Object.keys(swcJSON).forEach((node) => {
         const sphere = this.generateSphere(swcJSON[node]);
         neuron.add(sphere);
         if (this.show_cones) {
           if (swcJSON[node].parent !== -1) {
             const cone = this.generateConeGeometry(
               swcJSON[node],
-              swcJSON[swcJSON[node].parent]
+              swcJSON[swcJSON[node].parent],
             );
             neuron.add(cone);
           }
@@ -881,15 +887,15 @@ export default class SharkViewer {
 
     if (this.mode === "skeleton" || this.show_cones === false) {
       material = new THREE.LineBasicMaterial({
-        color: this.colors[this.colors.length - 1]
+        color: this.colors[this.colors.length - 1],
       });
       if (this.mode === "skeleton") material.color.set(this.colors[0]);
       geometry = new THREE.Geometry();
-      Object.keys(swcJSON).forEach(node => {
+      Object.keys(swcJSON).forEach((node) => {
         if (swcJSON[node].parent !== -1) {
           const vertices = generateSkeleton(
             swcJSON[node],
-            swcJSON[swcJSON[node].parent]
+            swcJSON[swcJSON[node].parent],
           );
           geometry.vertices.push(vertices.child);
           geometry.vertices.push(vertices.parent);
@@ -905,13 +911,13 @@ export default class SharkViewer {
   addAxes() {
     const CANVAS_WIDTH = 200;
     const CANVAS_HEIGHT = 200;
-    const axesRenderer = new THREE.WebGLRenderer( { alpha: true } ); // clear
-    axesRenderer.setClearColor( 0x000000, 0 );
-    axesRenderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
+    const axesRenderer = new THREE.WebGLRenderer({ alpha: true }); // clear
+    axesRenderer.setClearColor(0x000000, 0);
+    axesRenderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
     this.axesRenderer = axesRenderer;
 
-    const axesCanvas = this.dom_element.appendChild( axesRenderer.domElement );
-    axesCanvas.setAttribute('id', 'axesCanvas');
+    const axesCanvas = this.dom_element.appendChild(axesRenderer.domElement);
+    axesCanvas.setAttribute("id", "axesCanvas");
     axesCanvas.style.width = CANVAS_WIDTH;
     axesCanvas.style.height = CANVAS_HEIGHT;
     axesCanvas.style.position = "absolute";
@@ -919,17 +925,47 @@ export default class SharkViewer {
     axesCanvas.style.bottom = "5px";
     axesCanvas.style.right = "5px";
 
-
-
-    const axesCamera = new THREE.PerspectiveCamera( 50, CANVAS_WIDTH / CANVAS_HEIGHT, 1, 1000 );
+    const axesCamera = new THREE.PerspectiveCamera(
+      50,
+      CANVAS_WIDTH / CANVAS_HEIGHT,
+      1,
+      1000,
+    );
     axesCamera.up = this.camera.up; // important!
     this.axesCamera = axesCamera;
 
     const axesScene = new THREE.Scene();
-    const axesPos = new THREE.Vector3( 0,0,0 );
-    axesScene.add( new THREE.ArrowHelper( new THREE.Vector3( 1,0,0 ), axesPos, 60, 0xFF0000, 20, 10 ) );
-    axesScene.add( new THREE.ArrowHelper( new THREE.Vector3( 0,1,0 ), axesPos, 60, 0x00FF00, 20, 10 ) );
-    axesScene.add( new THREE.ArrowHelper( new THREE.Vector3( 0,0,1 ), axesPos, 60, 0x0000FF, 20, 10 ) );
+    const axesPos = new THREE.Vector3(0, 0, 0);
+    axesScene.add(
+      new THREE.ArrowHelper(
+        new THREE.Vector3(1, 0, 0),
+        axesPos,
+        60,
+        0xff0000,
+        20,
+        10,
+      ),
+    );
+    axesScene.add(
+      new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        axesPos,
+        60,
+        0x00ff00,
+        20,
+        10,
+      ),
+    );
+    axesScene.add(
+      new THREE.ArrowHelper(
+        new THREE.Vector3(0, 0, 1),
+        axesPos,
+        60,
+        0x0000ff,
+        20,
+        10,
+      ),
+    );
     this.axesScene = axesScene;
   }
 
@@ -939,22 +975,22 @@ export default class SharkViewer {
 
     // set up colors and materials based on color array
     this.three_colors = [];
-    Object.keys(this.colors).forEach(color => {
+    Object.keys(this.colors).forEach((color) => {
       this.three_colors.push(new THREE.Color(this.colors[color]));
-    })
+    });
     this.three_materials = [];
-    Object.keys(this.colors).forEach(color => {
+    Object.keys(this.colors).forEach((color) => {
       this.three_materials.push(
         new THREE.MeshBasicMaterial({
           color: this.colors[color],
-          wireframe: false
-        })
+          wireframe: false,
+        }),
       );
     });
 
     // setup render
     this.renderer = new THREE.WebGL1Renderer({
-      antialias: true // to get smoother output
+      antialias: true, // to get smoother output
     });
     this.renderer.setClearColor(this.backgroundColor, 1);
     this.renderer.setSize(this.WIDTH, this.HEIGHT);
@@ -975,15 +1011,15 @@ export default class SharkViewer {
       this.fov,
       this.WIDTH / this.HEIGHT,
       nearClipping,
-      farClipping
+      farClipping,
     );
 
     if (this.showStats) {
       this.stats = new Stats();
       this.stats.showPanel(0);
-      this.stats.domElement.style.position = 'absolute';
-      this.dom_element.style.position = 'relative';
-      this.stats.domElement.style.top = '0px';
+      this.stats.domElement.style.position = "absolute";
+      this.dom_element.style.position = "relative";
+      this.stats.domElement.style.top = "0px";
       this.stats.domElement.style.zIndex = 100;
       this.dom_element.appendChild(this.stats.dom);
     }
@@ -1017,7 +1053,10 @@ export default class SharkViewer {
       this.dom_element.appendChild(mElement);
     }
 
-    this.trackControls = new OrbitUnlimitedControls(this.camera, this.dom_element);
+    this.trackControls = new OrbitUnlimitedControls(
+      this.camera,
+      this.dom_element,
+    );
     this.trackControls.maxDistance = cameraPosition;
     this.trackControls.minDistance = 15;
     this.trackControls.addEventListener("change", this.render.bind(this));
@@ -1042,7 +1081,7 @@ export default class SharkViewer {
 
   cameraTarget() {
     const { target } = this.trackControls;
-    return {x: target.x, y: target.y, z: target.z };
+    return { x: target.x, y: target.y, z: target.z };
   }
 
   resetView() {
@@ -1059,11 +1098,16 @@ export default class SharkViewer {
     this.trackControls.update();
   }
 
-  resetAroundFirstNeuron({frontToBack} = {frontToBack: true}) {
-    const neurons = this.scene.children.filter(c => c.isNeuron);
+  resetAroundFirstNeuron({ frontToBack } = { frontToBack: true }) {
+    const neurons = this.scene.children.filter((c) => c.isNeuron);
     if (neurons.length > 0) {
       const target = neurons[0].boundingSphere.center;
-      const position = calculateCameraPosition(this.fov, neurons[0].boundingSphere, frontToBack, this.maxVolumeSize);
+      const position = calculateCameraPosition(
+        this.fov,
+        neurons[0].boundingSphere,
+        frontToBack,
+        this.maxVolumeSize,
+      );
       this.trackControls.update();
       this.trackControls.target.set(target.x, target.y, target.z);
       this.camera.position.set(position.x, position.y, position.z);
@@ -1085,16 +1129,18 @@ export default class SharkViewer {
 
     const intersects = this.raycaster.intersectObjects(
       [].concat(this.scene.children, this.sceneOnTopable.children),
-      true
+      true,
     );
 
     const points = intersects
-      .filter(o => o.object.type === "Points")
-      .filter(o => o.object.userData.materialShader.uniforms.alpha.value > 0.0)
+      .filter((o) => o.object.type === "Points")
+      .filter(
+        (o) => o.object.userData.materialShader.uniforms.alpha.value > 0.0,
+      )
       .sort((a, b) =>
         a.distanceToRay === b.distanceToRay
           ? a.distance - b.distance
-          : a.distanceToRay - b.distanceToRay
+          : a.distanceToRay - b.distanceToRay,
       );
 
     if (points.length > 0) {
@@ -1141,10 +1187,10 @@ export default class SharkViewer {
       }
       this.trackControls.update();
       if (this.showAxes) {
-        this.axesCamera.position.copy( this.camera.position );
-        this.axesCamera.position.sub( this.trackControls.target );
-        this.axesCamera.position.setLength( 300 );
-        this.axesCamera.lookAt( this.axesScene.position );
+        this.axesCamera.position.copy(this.camera.position);
+        this.axesCamera.position.sub(this.trackControls.target);
+        this.axesCamera.position.setLength(300);
+        this.axesCamera.lookAt(this.axesScene.position);
       }
     }
     if (this.stats) {
@@ -1180,12 +1226,24 @@ export default class SharkViewer {
    * @param {boolean} [frontToBack=false] - if true, then look down the Z-stack from point 0
    * @returns {null}
    */
-  loadNeuron(filename, color, nodes, updateCamera=true, onTopable=false, frontToBack=false) {
+  loadNeuron(
+    filename,
+    color,
+    nodes,
+    updateCamera = true,
+    onTopable = false,
+    frontToBack = false,
+  ) {
     const neuron = this.createNeuron(nodes, color);
     const boundingBox = calculateBoundingBox(nodes);
     const boundingSphere = calculateBoundingSphere(nodes, boundingBox);
     const target = boundingSphere.center;
-    const position = calculateCameraPosition(this.fov, boundingSphere, frontToBack, this.maxVolumeSize);
+    const position = calculateCameraPosition(
+      this.fov,
+      boundingSphere,
+      frontToBack,
+      this.maxVolumeSize,
+    );
 
     if (updateCamera) {
       this.trackControls.update();
@@ -1199,23 +1257,23 @@ export default class SharkViewer {
     neuron.isNeuron = true;
     neuron.boundingSphere = boundingSphere;
     const scene = onTopable ? this.sceneOnTopable : this.scene;
-    scene.add(neuron)
+    scene.add(neuron);
   }
 
   // use onTopable=true to correspond to loadNeuron(..., onTopable=true)
-  neuronLoaded(filename, onTopable=false) {
+  neuronLoaded(filename, onTopable = false) {
     const scene = onTopable ? this.sceneOnTopable : this.scene;
-    return (scene.getObjectByName(filename) !== undefined);
+    return scene.getObjectByName(filename) !== undefined;
   }
 
   // use onTopable=true to correspond to loadNeuron(..., onTopable=true)
-  unloadNeuron(filename, onTopable=false) {
+  unloadNeuron(filename, onTopable = false) {
     const scene = onTopable ? this.sceneOnTopable : this.scene;
     const neuron = scene.getObjectByName(filename);
     scene.remove(neuron);
   }
 
-  setNeuronVisible(id, visible, onTopable=false) {
+  setNeuronVisible(id, visible, onTopable = false) {
     const scene = onTopable ? this.sceneOnTopable : this.scene;
     const neuron = scene.getObjectByName(id);
     if (neuron) {
@@ -1230,7 +1288,7 @@ export default class SharkViewer {
       const neuron = this.scene.getObjectByName(id);
 
       if (neuron) {
-        neuron.children.forEach(child => {
+        neuron.children.forEach((child) => {
           if (child.userData.materialShader) {
             child.userData.materialShader.uniforms.alpha.value = opacity;
           }
@@ -1239,7 +1297,87 @@ export default class SharkViewer {
     }
   }
 
-  loadCompartment(id, color, geometryData, updateCamera=true) {
+  /**
+   * Define a opacidade de um neurônio (funciona em modo particle e outros modos)
+   * @param {string} id - Nome/ID do neurônio
+   * @param {number} opacity - Valor de opacidade entre 0.0 (transparente) e 1.0 (opaco)
+   * @param {boolean} onTopable - Se o neurônio está na cena onTopable
+   */
+  setNeuronOpacity(id, opacity, onTopable = false) {
+    const scene = onTopable ? this.sceneOnTopable : this.scene;
+    const neuron = scene.getObjectByName(id);
+
+    if (neuron) {
+      neuron.children.forEach((child) => {
+        // Para o material shader (usado em particles e cones)
+        if (child.userData.materialShader) {
+          child.userData.materialShader.uniforms.alpha.value = opacity;
+        }
+
+        // Para materiais normais (usado em sphere mode)
+        if (child.material) {
+          child.material.opacity = opacity;
+          child.material.transparent = opacity < 1.0;
+          child.material.needsUpdate = true;
+        }
+      });
+      this.render();
+    }
+  }
+
+  /**
+   * Define a cor de um neurônio
+   * @param {string} id - Nome/ID do neurônio
+   * @param {string|number} color - Cor no formato hexadecimal (string '#ff0000' ou número 0xff0000)
+   * @param {boolean} onTopable - Se o neurônio está na cena onTopable
+   */
+  setNeuronColor(id, color, onTopable = false) {
+    const scene = onTopable ? this.sceneOnTopable : this.scene;
+    const neuron = scene.getObjectByName(id);
+
+    if (neuron) {
+      const threeColor = new THREE.Color(color);
+
+      neuron.children.forEach((child) => {
+        // Para modo particle - atualizar os atributos de cor da geometria
+        if (child.geometry && child.geometry.attributes.typeColor) {
+          const typeColorAttribute = child.geometry.attributes.typeColor;
+          const count = typeColorAttribute.count;
+
+          for (let i = 0; i < count; i++) {
+            typeColorAttribute.setXYZ(
+              i,
+              threeColor.r,
+              threeColor.g,
+              threeColor.b,
+            );
+          }
+
+          typeColorAttribute.needsUpdate = true;
+        }
+
+        // Para modo sphere - atualizar o material
+        if (child.material && child.material.color) {
+          child.material.color.set(color);
+          child.material.needsUpdate = true;
+        }
+      });
+
+      this.render();
+    }
+  }
+
+  /**
+   * Obtém os neurônios carregados na cena
+   * @param {boolean} onTopable - Se deve buscar na cena onTopable
+   * @returns {Array} Array de objetos neurônio
+   */
+  getNeurons(onTopable = false) {
+    const scene = onTopable ? this.sceneOnTopable : this.scene;
+    return scene.children.filter((c) => c.isNeuron);
+  }
+
+  loadCompartment(id, color, geometryData, updateCamera = true) {
     const loader = new THREE.OBJLoader();
     let parsed = loader.parse(geometryData);
     parsed = applySemiTransparentShader(parsed, color);
@@ -1253,10 +1391,10 @@ export default class SharkViewer {
     this.render();
   }
 
-  loadCompartmentFromURL(id, color, URL, updateCamera=true) {
+  loadCompartmentFromURL(id, color, URL, updateCamera = true) {
     const loader = new THREE.OBJLoader();
 
-    loader.load(URL, object => {
+    loader.load(URL, (object) => {
       const exists = this.scene.getObjectByName(id);
       if (!exists) {
         const shadedObject = applySemiTransparentShader(object, color);
@@ -1270,7 +1408,7 @@ export default class SharkViewer {
   }
 
   compartmentLoaded(id) {
-    return (this.scene.getObjectByName(id) !== undefined);
+    return this.scene.getObjectByName(id) !== undefined;
   }
 
   /**
@@ -1280,7 +1418,11 @@ export default class SharkViewer {
    */
   centerCameraAroundCompartment(compartment) {
     const boundingBox = new THREE.Box3().setFromObject(compartment);
-    this.camera.position.set(boundingBox.min.x - 10, boundingBox.min.y - 10, boundingBox.min.z - 10);
+    this.camera.position.set(
+      boundingBox.min.x - 10,
+      boundingBox.min.y - 10,
+      boundingBox.min.z - 10,
+    );
     this.trackControls.update();
     const boxCenter = boundingBox.getCenter();
     this.trackControls.target = boxCenter;
